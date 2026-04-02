@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.authorize = void 0;
-const authorize = (...allowedRoles) => {
+export const authorize = (...allowedRoles) => {
     return (req, res, next) => {
         if (!req.user) {
             return res.status(401).json({
@@ -18,4 +15,3 @@ const authorize = (...allowedRoles) => {
         next();
     };
 };
-exports.authorize = authorize;

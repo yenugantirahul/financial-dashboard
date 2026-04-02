@@ -10,6 +10,10 @@ import recordsRouter from "./routes/records.routes.js";
 import cors from "cors";
 
 const app = express();
+const corsOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:3000")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(cookieParser());
 
@@ -17,7 +21,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: corsOrigins,
     credentials: true, // important if using cookies
   })
 );

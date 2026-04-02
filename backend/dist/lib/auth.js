@@ -1,11 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.auth = void 0;
-const better_auth_1 = require("better-auth");
-const prisma_adapter_1 = require("@better-auth/prisma-adapter");
-const prisma_js_1 = require("./prisma.js");
-exports.auth = (0, better_auth_1.betterAuth)({
-    database: (0, prisma_adapter_1.prismaAdapter)(prisma_js_1.prisma, {
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "@better-auth/prisma-adapter";
+import { prisma } from "./prisma.js";
+export const auth = betterAuth({
+    database: prismaAdapter(prisma, {
         provider: "postgresql",
     }),
     emailAndPassword: {

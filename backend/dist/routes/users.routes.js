@@ -1,17 +1,15 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const auth_js_1 = require("../lib/auth.js");
-const authmiddleware_js_1 = require("../middlewares/authmiddleware.js");
-const authorizemiddleware_js_1 = require("../middlewares/authorizemiddleware.js");
-const validation_js_1 = require("../middlewares/validation.js");
-const schemas_js_1 = require("../validators/schemas.js");
-const router = (0, express_1.Router)();
-router.use(authmiddleware_js_1.authenticate, (0, authorizemiddleware_js_1.authorize)("ADMIN"));
-router.post("/create", (0, validation_js_1.validateBody)(schemas_js_1.createUserSchema), async (req, res) => {
+import { Router } from "express";
+import { auth } from "../lib/auth.js";
+import { authenticate } from "../middlewares/authmiddleware.js";
+import { authorize } from "../middlewares/authorizemiddleware.js";
+import { validateBody } from "../middlewares/validation.js";
+import { createUserSchema } from "../validators/schemas.js";
+const router = Router();
+router.use(authenticate, authorize("ADMIN"));
+router.post("/create", validateBody(createUserSchema), async (req, res) => {
     try {
         const { name, email, password, image, role, status } = req.body;
-        const createdUser = await auth_js_1.auth.api.signUpEmail({
+        const createdUser = await auth.api.signUpEmail({
             body: {
                 name,
                 email,
@@ -36,4 +34,4 @@ router.post("/create", (0, validation_js_1.validateBody)(schemas_js_1.createUser
         });
     }
 });
-exports.default = router;
+export default router;

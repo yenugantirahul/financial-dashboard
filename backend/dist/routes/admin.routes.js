@@ -1,16 +1,14 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const prisma_js_1 = require("../lib/prisma.js");
-const authmiddleware_js_1 = require("../middlewares/authmiddleware.js");
-const authorizemiddleware_js_1 = require("../middlewares/authorizemiddleware.js");
-const validation_js_1 = require("../middlewares/validation.js");
-const schemas_js_1 = require("../validators/schemas.js");
-const router = (0, express_1.Router)();
-router.use(authmiddleware_js_1.authenticate, (0, authorizemiddleware_js_1.authorize)("ADMIN"));
-router.get("/users", (0, validation_js_1.validateQuery)(schemas_js_1.adminUsersQuerySchema), async (req, res) => {
+import { Router } from "express";
+import { prisma } from "../lib/prisma.js";
+import { authenticate } from "../middlewares/authmiddleware.js";
+import { authorize } from "../middlewares/authorizemiddleware.js";
+import { validateBody, validateParams, validateQuery } from "../middlewares/validation.js";
+import { adminUpdateUserSchema, adminUsersQuerySchema, recordIdParamSchema } from "../validators/schemas.js";
+const router = Router();
+router.use(authenticate, authorize("ADMIN"));
+router.get("/users", validateQuery(adminUsersQuerySchema), async (req, res) => {
     try {
-        const { search, role, status, page, limit } = schemas_js_1.adminUsersQuerySchema.parse(req.query);
+        const { search, role, status, page, limit } = adminUsersQuerySchema.parse(req.query);
         const pageNumber = page;
         const pageSize = limit;
         const skip = (pageNumber - 1) * pageSize;
@@ -27,9 +25,9 @@ router.get("/users", (0, validation_js_1.validateQuery)(schemas_js_1.adminUsersQ
         if (status) {
             where.status = status;
         }
-        const [total, users] = await prisma_js_1.prisma.$transaction([
-            prisma_js_1.prisma.user.count({ where }),
-            prisma_js_1.prisma.user.findMany({
+        const [total, users] = await prisma.$transaction([
+            prisma.user.count({ where }),
+            prisma.user.findMany({
                 where,
                 orderBy: { createdAt: "desc" },
                 skip,
@@ -66,10 +64,10 @@ router.get("/users", (0, validation_js_1.validateQuery)(schemas_js_1.adminUsersQ
         });
     }
 });
-router.get("/users/:id", (0, validation_js_1.validateParams)(schemas_js_1.recordIdParamSchema), async (req, res) => {
+router.get("/users/:id", validateParams(recordIdParamSchema), async (req, res) => {
     try {
         const userId = String(req.params.id);
-        const user = await prisma_js_1.prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: { id: userId },
             select: {
                 id: true,
@@ -99,7 +97,7 @@ router.get("/users/:id", (0, validation_js_1.validateParams)(schemas_js_1.record
         });
     }
 });
-router.patch("/users/:id", (0, validation_js_1.validateParams)(schemas_js_1.recordIdParamSchema), (0, validation_js_1.validateBody)(schemas_js_1.adminUpdateUserSchema), async (req, res) => {
+router.patch("/users/:id", validateParams(recordIdParamSchema), validateBody(adminUpdateUserSchema), async (req, res) => {
     try {
         const userId = String(req.params.id);
         const { name, email, role, status, image } = req.body;
@@ -131,7 +129,7 @@ router.patch("/users/:id", (0, validation_js_1.validateParams)(schemas_js_1.reco
         if (image !== undefined) {
             data.image = image;
         }
-        const updatedUser = await prisma_js_1.prisma.user.update({
+        const updatedUser = await prisma.user.update({
             where: { id: userId },
             data,
             select: {
@@ -160,17 +158,17 @@ router.patch("/users/:id", (0, validation_js_1.validateParams)(schemas_js_1.reco
         });
     }
 });
-router.delete("/users/:id", (0, validation_js_1.validateParams)(schemas_js_1.recordIdParamSchema), async (req, res) => {
+router.delete("/users/:id", validateParams(recordIdParamSchema), async (req, res) => {
     try {
         const userId = String(req.params.id);
-        const existing = await prisma_js_1.prisma.user.findUnique({ where: { id: userId } });
+        const existing = await prisma.user.findUnique({ where: { id: userId } });
         if (!existing) {
             return res.status(404).json({
                 success: false,
                 message: "User not found",
             });
         }
-        await prisma_js_1.prisma.user.delete({ where: { id: userId } });
+        await prisma.user.delete({ where: { id: userId } });
         return res.json({
             success: true,
             message: "User deleted successfully",
@@ -184,4 +182,4 @@ router.delete("/users/:id", (0, validation_js_1.validateParams)(schemas_js_1.rec
         });
     }
 });
-exports.default = router;
+export default router;
