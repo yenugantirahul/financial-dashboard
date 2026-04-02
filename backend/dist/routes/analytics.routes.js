@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authenticate } from "../middlewares/authmiddleware";
-import { authorize } from "../middlewares/authorizemiddleware";
+import { authenticate } from "../middlewares/authmiddleware.js";
+import { authorize } from "../middlewares/authorizemiddleware.js";
 const router = Router();
 router.get("/", authenticate, authorize("ADMIN", "ANALYST"), (req, res) => {
     res.json({ message: "Analytics data" });

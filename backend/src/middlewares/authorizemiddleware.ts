@@ -1,5 +1,5 @@
 import { Response, NextFunction } from "express";
-import { AuthenticatedRequest } from "./authmiddleware";
+import { AuthenticatedRequest } from "./authmiddleware.js";
 
 export const authorize = (...allowedRoles: ("ADMIN" | "ANALYST" | "VIEWER")[]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
