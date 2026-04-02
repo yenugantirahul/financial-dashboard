@@ -1,11 +1,13 @@
-import { Router } from "express";
-import { prisma } from "../lib/prisma.js";
-import { authenticate } from "../middlewares/authmiddleware.js";
-import { authorize } from "../middlewares/authorizemiddleware.js";
-import { recordsWriteRateLimiter } from "../middlewares/ratelimit.js";
-import { validateBody, validateParams, validateQuery } from "../middlewares/validation.js";
-import { createRecordSchema, recordIdParamSchema, recordsQuerySchema, updateRecordSchema, } from "../validators/schemas.js";
-const router = Router();
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const prisma_js_1 = require("../lib/prisma.js");
+const authmiddleware_js_1 = require("../middlewares/authmiddleware.js");
+const authorizemiddleware_js_1 = require("../middlewares/authorizemiddleware.js");
+const ratelimit_js_1 = require("../middlewares/ratelimit.js");
+const validation_js_1 = require("../middlewares/validation.js");
+const schemas_js_1 = require("../validators/schemas.js");
+const router = (0, express_1.Router)();
 const recordTypes = ["INCOME", "EXPENSE"];
 const serializeRecord = (record) => ({
     ...record,
@@ -27,14 +29,15 @@ const parseAmount = (value) => {
     }
     return null;
 };
-router.use(authenticate);
-router.get("/", authorize("ADMIN", "ANALYST"), validateQuery(recordsQuerySchema), async (req, res) => {
+router.use(authmiddleware_js_1.authenticate);
+router.get("/", (0, authorizemiddleware_js_1.authorize)("ADMIN", "ANALYST"), (0, validation_js_1.validateQuery)(schemas_js_1.recordsQuerySchema), async (req, res) => {
+    var _a;
     try {
-        const { search, type, category, from, to, userId, deleted, page, limit } = recordsQuerySchema.parse(req.query);
+        const { search, type, category, from, to, userId, deleted, page, limit } = schemas_js_1.recordsQuerySchema.parse(req.query);
         const pageNumber = page;
         const pageSize = limit;
         const skip = (pageNumber - 1) * pageSize;
-        if (userId && req.user?.role !== "ADMIN") {
+        if (userId && ((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) !== "ADMIN") {
             return res.status(403).json({
                 success: false,
                 message: "Only admins can filter by userId",
@@ -97,9 +100,9 @@ router.get("/", authorize("ADMIN", "ANALYST"), validateQuery(recordsQuerySchema)
             andConditions.push({ userId });
         }
         const where = andConditions.length ? { AND: andConditions } : {};
-        const [total, records] = await prisma.$transaction([
-            prisma.financialRecord.count({ where }),
-            prisma.financialRecord.findMany({
+        const [total, records] = await prisma_js_1.prisma.$transaction([
+            prisma_js_1.prisma.financialRecord.count({ where }),
+            prisma_js_1.prisma.financialRecord.findMany({
                 where,
                 include: {
                     user: {
@@ -136,10 +139,10 @@ router.get("/", authorize("ADMIN", "ANALYST"), validateQuery(recordsQuerySchema)
         });
     }
 });
-router.get("/:id", authorize("ADMIN", "ANALYST"), validateParams(recordIdParamSchema), async (req, res) => {
+router.get("/:id", (0, authorizemiddleware_js_1.authorize)("ADMIN", "ANALYST"), (0, validation_js_1.validateParams)(schemas_js_1.recordIdParamSchema), async (req, res) => {
     try {
         const recordId = String(req.params.id);
-        const record = await prisma.financialRecord.findFirst({
+        const record = await prisma_js_1.prisma.financialRecord.findFirst({
             where: { id: recordId, deletedAt: null },
             include: {
                 user: {
@@ -169,7 +172,8 @@ router.get("/:id", authorize("ADMIN", "ANALYST"), validateParams(recordIdParamSc
         });
     }
 });
-router.post("/", recordsWriteRateLimiter, authorize("ADMIN"), validateBody(createRecordSchema), async (req, res) => {
+router.post("/", ratelimit_js_1.recordsWriteRateLimiter, (0, authorizemiddleware_js_1.authorize)("ADMIN"), (0, validation_js_1.validateBody)(schemas_js_1.createRecordSchema), async (req, res) => {
+    var _a;
     try {
         const { amount, type, category, date, notes, userId } = req.body;
         const parsedAmount = parseAmount(amount);
@@ -192,27 +196,27 @@ router.post("/", recordsWriteRateLimiter, authorize("ADMIN"), validateBody(creat
                 message: "date must be valid",
             });
         }
-        const targetUserId = userId || req.user?.id;
+        const targetUserId = userId || ((_a = req.user) === null || _a === void 0 ? void 0 : _a.id);
         if (!targetUserId) {
             return res.status(400).json({
                 success: false,
                 message: "userId is required",
             });
         }
-        const targetUser = await prisma.user.findUnique({ where: { id: String(targetUserId) } });
+        const targetUser = await prisma_js_1.prisma.user.findUnique({ where: { id: String(targetUserId) } });
         if (!targetUser) {
             return res.status(404).json({
                 success: false,
                 message: "Target user not found",
             });
         }
-        const record = await prisma.financialRecord.create({
+        const record = await prisma_js_1.prisma.financialRecord.create({
             data: {
                 amount: parsedAmount,
                 type,
                 category: category.trim(),
                 date: recordDate,
-                notes: notes?.trim() || null,
+                notes: (notes === null || notes === void 0 ? void 0 : notes.trim()) || null,
                 userId: String(targetUserId),
             },
             include: {
@@ -241,10 +245,10 @@ router.post("/", recordsWriteRateLimiter, authorize("ADMIN"), validateBody(creat
         });
     }
 });
-router.patch("/:id", recordsWriteRateLimiter, authorize("ADMIN"), validateParams(recordIdParamSchema), validateBody(updateRecordSchema), async (req, res) => {
+router.patch("/:id", ratelimit_js_1.recordsWriteRateLimiter, (0, authorizemiddleware_js_1.authorize)("ADMIN"), (0, validation_js_1.validateParams)(schemas_js_1.recordIdParamSchema), (0, validation_js_1.validateBody)(schemas_js_1.updateRecordSchema), async (req, res) => {
     try {
         const recordId = String(req.params.id);
-        const existing = await prisma.financialRecord.findFirst({
+        const existing = await prisma_js_1.prisma.financialRecord.findFirst({
             where: { id: recordId, deletedAt: null },
         });
         if (!existing) {
@@ -294,9 +298,9 @@ router.patch("/:id", recordsWriteRateLimiter, authorize("ADMIN"), validateParams
             data.date = parsedDate;
         }
         if (notes !== undefined) {
-            data.notes = notes?.trim() || null;
+            data.notes = (notes === null || notes === void 0 ? void 0 : notes.trim()) || null;
         }
-        const updatedRecord = await prisma.financialRecord.update({
+        const updatedRecord = await prisma_js_1.prisma.financialRecord.update({
             where: { id: recordId },
             data,
             include: {
@@ -325,10 +329,10 @@ router.patch("/:id", recordsWriteRateLimiter, authorize("ADMIN"), validateParams
         });
     }
 });
-router.delete("/:id", recordsWriteRateLimiter, authorize("ADMIN"), validateParams(recordIdParamSchema), async (req, res) => {
+router.delete("/:id", ratelimit_js_1.recordsWriteRateLimiter, (0, authorizemiddleware_js_1.authorize)("ADMIN"), (0, validation_js_1.validateParams)(schemas_js_1.recordIdParamSchema), async (req, res) => {
     try {
         const recordId = String(req.params.id);
-        const existing = await prisma.financialRecord.findFirst({
+        const existing = await prisma_js_1.prisma.financialRecord.findFirst({
             where: { id: recordId, deletedAt: null },
         });
         if (!existing) {
@@ -337,7 +341,7 @@ router.delete("/:id", recordsWriteRateLimiter, authorize("ADMIN"), validateParam
                 message: "Record not found",
             });
         }
-        await prisma.financialRecord.update({
+        await prisma_js_1.prisma.financialRecord.update({
             where: { id: recordId },
             data: { deletedAt: new Date() },
         });
@@ -354,10 +358,10 @@ router.delete("/:id", recordsWriteRateLimiter, authorize("ADMIN"), validateParam
         });
     }
 });
-router.patch("/:id/restore", recordsWriteRateLimiter, authorize("ADMIN"), validateParams(recordIdParamSchema), async (req, res) => {
+router.patch("/:id/restore", ratelimit_js_1.recordsWriteRateLimiter, (0, authorizemiddleware_js_1.authorize)("ADMIN"), (0, validation_js_1.validateParams)(schemas_js_1.recordIdParamSchema), async (req, res) => {
     try {
         const recordId = String(req.params.id);
-        const existing = await prisma.financialRecord.findUnique({
+        const existing = await prisma_js_1.prisma.financialRecord.findUnique({
             where: { id: recordId },
         });
         if (!existing || !existing.deletedAt) {
@@ -366,7 +370,7 @@ router.patch("/:id/restore", recordsWriteRateLimiter, authorize("ADMIN"), valida
                 message: "Deleted record not found",
             });
         }
-        const restored = await prisma.financialRecord.update({
+        const restored = await prisma_js_1.prisma.financialRecord.update({
             where: { id: recordId },
             data: { deletedAt: null },
             include: {
@@ -395,4 +399,4 @@ router.patch("/:id/restore", recordsWriteRateLimiter, authorize("ADMIN"), valida
         });
     }
 });
-export default router;
+exports.default = router;

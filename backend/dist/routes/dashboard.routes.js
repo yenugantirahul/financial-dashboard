@@ -1,24 +1,27 @@
-import { Router } from "express";
-import { prisma } from "../lib/prisma.js";
-import { authenticate } from "../middlewares/authmiddleware.js";
-import { authorize } from "../middlewares/authorizemiddleware.js";
-const router = Router();
-const toNumber = (value) => Number(String(value ?? 0));
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const prisma_js_1 = require("../lib/prisma.js");
+const authmiddleware_js_1 = require("../middlewares/authmiddleware.js");
+const authorizemiddleware_js_1 = require("../middlewares/authorizemiddleware.js");
+const router = (0, express_1.Router)();
+const toNumber = (value) => Number(String(value !== null && value !== void 0 ? value : 0));
 const formatMonthKey = (date) => date.toISOString().slice(0, 7);
-router.get("/", authenticate, authorize("ADMIN", "ANALYST", "VIEWER"), async (req, res) => {
+router.get("/", authmiddleware_js_1.authenticate, (0, authorizemiddleware_js_1.authorize)("ADMIN", "ANALYST", "VIEWER"), async (req, res) => {
+    var _a;
     try {
-        const [income, expense, recentRecords, categoryTotals, trendRecords] = await prisma.$transaction([
-            prisma.financialRecord.aggregate({
+        const [income, expense, recentRecords, categoryTotals, trendRecords] = await prisma_js_1.prisma.$transaction([
+            prisma_js_1.prisma.financialRecord.aggregate({
                 where: { type: "INCOME", deletedAt: null },
                 _sum: { amount: true },
                 _count: { _all: true },
             }),
-            prisma.financialRecord.aggregate({
+            prisma_js_1.prisma.financialRecord.aggregate({
                 where: { type: "EXPENSE", deletedAt: null },
                 _sum: { amount: true },
                 _count: { _all: true },
             }),
-            prisma.financialRecord.findMany({
+            prisma_js_1.prisma.financialRecord.findMany({
                 where: { deletedAt: null },
                 orderBy: { date: "desc" },
                 take: 5,
@@ -32,13 +35,13 @@ router.get("/", authenticate, authorize("ADMIN", "ANALYST", "VIEWER"), async (re
                     userId: true,
                 },
             }),
-            prisma.financialRecord.groupBy({
+            prisma_js_1.prisma.financialRecord.groupBy({
                 by: ["category", "type"],
                 where: { deletedAt: null },
                 _sum: { amount: true },
                 orderBy: [{ category: "asc" }, { type: "asc" }],
             }),
-            prisma.financialRecord.findMany({
+            prisma_js_1.prisma.financialRecord.findMany({
                 where: {
                     deletedAt: null,
                     date: {
@@ -73,11 +76,14 @@ router.get("/", authenticate, authorize("ADMIN", "ANALYST", "VIEWER"), async (re
             }
             bucket.net = bucket.income - bucket.expense;
         }
-        const categoryWiseTotals = categoryTotals.map((entry) => ({
-            category: entry.category,
-            type: entry.type,
-            total: toNumber(entry._sum?.amount ?? 0),
-        }));
+        const categoryWiseTotals = categoryTotals.map((entry) => {
+            var _a, _b;
+            return ({
+                category: entry.category,
+                type: entry.type,
+                total: toNumber((_b = (_a = entry._sum) === null || _a === void 0 ? void 0 : _a.amount) !== null && _b !== void 0 ? _b : 0),
+            });
+        });
         const totalIncome = toNumber(income._sum.amount);
         const totalExpense = toNumber(expense._sum.amount);
         return res.json({
@@ -97,7 +103,7 @@ router.get("/", authenticate, authorize("ADMIN", "ANALYST", "VIEWER"), async (re
                     date: record.date.toISOString(),
                 })),
                 monthlyTrends: Array.from(monthlyMap.values()),
-                role: req.user?.role,
+                role: (_a = req.user) === null || _a === void 0 ? void 0 : _a.role,
             },
         });
     }
@@ -109,9 +115,9 @@ router.get("/", authenticate, authorize("ADMIN", "ANALYST", "VIEWER"), async (re
         });
     }
 });
-router.get("/trends", authenticate, authorize("ADMIN", "ANALYST", "VIEWER"), async (_req, res) => {
+router.get("/trends", authmiddleware_js_1.authenticate, (0, authorizemiddleware_js_1.authorize)("ADMIN", "ANALYST", "VIEWER"), async (_req, res) => {
     try {
-        const records = await prisma.financialRecord.findMany({
+        const records = await prisma_js_1.prisma.financialRecord.findMany({
             where: {
                 deletedAt: null,
                 date: {
@@ -158,4 +164,4 @@ router.get("/trends", authenticate, authorize("ADMIN", "ANALYST", "VIEWER"), asy
         });
     }
 });
-export default router;
+exports.default = router;

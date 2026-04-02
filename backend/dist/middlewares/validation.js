@@ -1,3 +1,6 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.validateParams = exports.validateQuery = exports.validateBody = void 0;
 const validate = (source, schema) => {
     return (req, res, next) => {
         const result = schema.safeParse(req[source]);
@@ -24,6 +27,9 @@ const validate = (source, schema) => {
         next();
     };
 };
-export const validateBody = (schema) => validate("body", schema);
-export const validateQuery = (schema) => validate("query", schema);
-export const validateParams = (schema) => validate("params", schema);
+const validateBody = (schema) => validate("body", schema);
+exports.validateBody = validateBody;
+const validateQuery = (schema) => validate("query", schema);
+exports.validateQuery = validateQuery;
+const validateParams = (schema) => validate("params", schema);
+exports.validateParams = validateParams;
