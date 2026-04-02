@@ -10,7 +10,7 @@ import recordsRouter from "./routes/records.routes.js";
 import cors from "cors";
 
 const app = express();
-const corsOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:3000")
+const corsOrigins = (process.env.CORS_ORIGIN ?? "https://financial-dashboard-rho-one.vercel.app")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
