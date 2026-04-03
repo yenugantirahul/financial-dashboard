@@ -59,8 +59,8 @@ export default function AuthPage() {
           id: String(user.id),
           name: String(user.name ?? ""),
           email: String(user.email),
-          role: ((user as Record<string, unknown>).role as Role) ?? "VIEWER",
-          status: ((user as Record<string, unknown>).status as Status) ?? "ACTIVE",
+          role: (user.role ?? "VIEWER") as Role,
+          status: (user.status ?? "ACTIVE") as Status,
         },
       });
       setStatus("Login successful, redirecting...");
@@ -100,8 +100,8 @@ export default function AuthPage() {
           id: String(user.id),
           name: String(user.name ?? ""),
           email: String(user.email),
-          role: ((user as Record<string, unknown>).role as Role) ?? "VIEWER",
-          status: ((user as Record<string, unknown>).status as Status) ?? "ACTIVE",
+          role: (user.role ?? "VIEWER") as Role,
+          status: (user.status ?? "ACTIVE") as Status,
         },
       });
       setStatus("Signup successful, redirecting...");
