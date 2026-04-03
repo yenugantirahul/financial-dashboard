@@ -22,7 +22,10 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: corsOrigins,
-    credentials: true, // important if using cookies
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Set-Cookie"],
   })
 );
 
