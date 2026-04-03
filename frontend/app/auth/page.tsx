@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInEmail, signUpEmail } from "@/lib/auth/api";
+import { authClient } from "@/lib/auth/client";
 import { getStoredSession, setStoredSession } from "@/lib/auth/session";
 import { Role, Status } from "@/lib/dashboard/types";
 
@@ -39,11 +39,30 @@ export default function AuthPage() {
     setLoading(true);
     setStatus("Signing in...");
     try {
-      const result = await signInEmail(loginForm);
-      if (!result.token) {
-        throw new Error("No session token returned. Please verify Better Auth configuration.");
+      const response = await authClient.signIn.email({
+        email: loginForm.email,
+        password: loginForm.password,
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message ?? "Login failed");
       }
-      setStoredSession({ token: result.token, user: result.user });
+
+      if (!response.data?.user) {
+        throw new Error("Authentication response missing user data.");
+      }
+
+      const user = response.data.user;
+      setStoredSession({
+        token: response.data.token ?? "__cookie_session__",
+        user: {
+          id: String(user.id),
+          name: String(user.name ?? ""),
+          email: String(user.email),
+          role: ((user as Record<string, unknown>).role as Role) ?? "VIEWER",
+          status: ((user as Record<string, unknown>).status as Status) ?? "ACTIVE",
+        },
+      });
       setStatus("Login successful, redirecting...");
       router.replace("/dashboard");
     } catch (error) {
@@ -58,11 +77,33 @@ export default function AuthPage() {
     setLoading(true);
     setStatus("Creating account...");
     try {
-      const result = await signUpEmail(signupForm);
-      if (!result.token) {
-        throw new Error("No session token returned. Please verify Better Auth configuration.");
+      const response = await authClient.signUp.email({
+        name: signupForm.name,
+        email: signupForm.email,
+        password: signupForm.password,
+        role: signupForm.role,
+        status: signupForm.status,
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message ?? "Signup failed");
       }
-      setStoredSession({ token: result.token, user: result.user });
+
+      if (!response.data?.user) {
+        throw new Error("Authentication response missing user data.");
+      }
+
+      const user = response.data.user;
+      setStoredSession({
+        token: response.data.token ?? "__cookie_session__",
+        user: {
+          id: String(user.id),
+          name: String(user.name ?? ""),
+          email: String(user.email),
+          role: ((user as Record<string, unknown>).role as Role) ?? "VIEWER",
+          status: ((user as Record<string, unknown>).status as Status) ?? "ACTIVE",
+        },
+      });
       setStatus("Signup successful, redirecting...");
       router.replace("/dashboard");
     } catch (error) {
@@ -77,10 +118,13 @@ export default function AuthPage() {
       <section className="glass grid w-full overflow-hidden md:grid-cols-2">
         <aside className="relative p-6 md:p-8">
           <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-(--accent)/20 blur-2xl" />
-          <p className="text-xs font-mono uppercase tracking-[0.24em] muted">Zorvyn Finance</p>
+          <p className="text-xs font-mono uppercase tracking-[0.24em] muted">
+            Zorvyn Finance
+          </p>
           <h1 className="mt-2 text-3xl font-semibold">Secure Access Portal</h1>
           <p className="mt-3 muted">
-            Create your account or login before entering the operational dashboard.
+            Create your account or login before entering the operational
+            dashboard.
           </p>
           <div className="mt-8 flex gap-2">
             <button
@@ -110,7 +154,9 @@ export default function AuthPage() {
                 type="email"
                 placeholder="Email"
                 value={loginForm.email}
-                onChange={(e) => setLoginForm((prev) => ({ ...prev, email: e.target.value }))}
+                onChange={(e) =>
+                  setLoginForm((prev) => ({ ...prev, email: e.target.value }))
+                }
                 required
               />
               <input
@@ -119,7 +165,12 @@ export default function AuthPage() {
                 placeholder="Password"
                 minLength={8}
                 value={loginForm.password}
-                onChange={(e) => setLoginForm((prev) => ({ ...prev, password: e.target.value }))}
+                onChange={(e) =>
+                  setLoginForm((prev) => ({
+                    ...prev,
+                    password: e.target.value,
+                  }))
+                }
                 required
               />
               <button className="btn btn-primary w-full" disabled={loading}>
@@ -133,7 +184,9 @@ export default function AuthPage() {
                 className="field w-full"
                 placeholder="Full Name"
                 value={signupForm.name}
-                onChange={(e) => setSignupForm((prev) => ({ ...prev, name: e.target.value }))}
+                onChange={(e) =>
+                  setSignupForm((prev) => ({ ...prev, name: e.target.value }))
+                }
                 required
               />
               <input
@@ -141,7 +194,9 @@ export default function AuthPage() {
                 type="email"
                 placeholder="Email"
                 value={signupForm.email}
-                onChange={(e) => setSignupForm((prev) => ({ ...prev, email: e.target.value }))}
+                onChange={(e) =>
+                  setSignupForm((prev) => ({ ...prev, email: e.target.value }))
+                }
                 required
               />
               <input
@@ -150,14 +205,24 @@ export default function AuthPage() {
                 placeholder="Password"
                 minLength={8}
                 value={signupForm.password}
-                onChange={(e) => setSignupForm((prev) => ({ ...prev, password: e.target.value }))}
+                onChange={(e) =>
+                  setSignupForm((prev) => ({
+                    ...prev,
+                    password: e.target.value,
+                  }))
+                }
                 required
               />
               <div className="grid grid-cols-2 gap-2">
                 <select
                   className="field"
                   value={signupForm.role}
-                  onChange={(e) => setSignupForm((prev) => ({ ...prev, role: e.target.value as Role }))}
+                  onChange={(e) =>
+                    setSignupForm((prev) => ({
+                      ...prev,
+                      role: e.target.value as Role,
+                    }))
+                  }
                 >
                   <option value="ADMIN">ADMIN</option>
                   <option value="ANALYST">ANALYST</option>
@@ -166,7 +231,12 @@ export default function AuthPage() {
                 <select
                   className="field"
                   value={signupForm.status}
-                  onChange={(e) => setSignupForm((prev) => ({ ...prev, status: e.target.value as Status }))}
+                  onChange={(e) =>
+                    setSignupForm((prev) => ({
+                      ...prev,
+                      status: e.target.value as Status,
+                    }))
+                  }
                 >
                   <option value="ACTIVE">ACTIVE</option>
                   <option value="INACTIVE">INACTIVE</option>

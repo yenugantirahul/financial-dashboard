@@ -1,10 +1,7 @@
-import { createAuthClient } from "better-auth/client";
+"use client";
 
-const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000";
-
+import { createAuthClient } from "better-auth/react";
 export const authClient = createAuthClient({
-  baseURL: `${BACKEND_BASE}/api/auth`,
-  fetchOptions: {
-    credentials: "include",
-  },
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL!,
+  // example: http://localhost:8080
 });
