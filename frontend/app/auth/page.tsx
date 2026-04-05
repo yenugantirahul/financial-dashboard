@@ -37,7 +37,7 @@ export default function AuthPage() {
   const onLogin = async (event: FormEvent) => {
     event.preventDefault();
     setLoading(true);
-    setStatus("Signing in...");
+    setStatus("Signing in....");
     try {
       const response = await authClient.signIn.email({
         email: loginForm.email,
