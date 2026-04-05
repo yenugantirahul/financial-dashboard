@@ -126,6 +126,27 @@ export function RecordsSection({
             value={recordFilter.search}
             onChange={(e) => onFilterChange({ ...recordFilter, search: e.target.value })}
           />
+          <div className="flex items-center gap-1">
+            <label className="text-xs muted whitespace-nowrap">From</label>
+            <input
+              id="filter-date-from"
+              className="field text-sm"
+              type="date"
+              value={recordFilter.from}
+              onChange={(e) => onFilterChange({ ...recordFilter, from: e.target.value })}
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <label className="text-xs muted whitespace-nowrap">To</label>
+            <input
+              id="filter-date-to"
+              className="field text-sm"
+              type="date"
+              value={recordFilter.to}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => onFilterChange({ ...recordFilter, to: e.target.value })}
+            />
+          </div>
           <button className="btn btn-ghost text-sm" onClick={onApply}>
             Apply
           </button>

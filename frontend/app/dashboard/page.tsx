@@ -7,6 +7,7 @@ import { SummaryGrid } from "@/components/dashboard/SummaryGrid";
 import { TrendsSection } from "@/components/dashboard/TrendsSection";
 import { RecordsSection } from "@/components/dashboard/RecordsSection";
 import { AdminPanels } from "@/components/dashboard/AdminPanels";
+import { SpendingHeatmap } from "@/components/dashboard/SpendingHeatmap";
 import { apiRequest, deleteRecord, getRecords, updateRecord } from "@/lib/dashboard/api";
 import { clearStoredSession, getStoredSession } from "@/lib/auth/session";
 import {
@@ -36,11 +37,16 @@ export default function DashboardPage() {
   const [monthlyTrends, setMonthlyTrends] = useState<MonthlyTrend[]>([]);
   const [records, setRecords] = useState<RecordItem[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [heatmapData, setHeatmapData] = useState<
+    { date: string; income: number; expense: number; net: number; count: number }[]
+  >([]);
 
   const [recordFilter, setRecordFilter] = useState<RecordFilter>({
     type: "",
     category: "",
     search: "",
+    from: "",
+    to: "",
   });
   const [recordsMeta, setRecordsMeta] = useState<RecordsMeta>({
     page: 1,
@@ -111,6 +117,8 @@ export default function DashboardPage() {
         type: recordFilter.type || undefined,
         category: recordFilter.category,
         search: recordFilter.search,
+        from: recordFilter.from || undefined,
+        to: recordFilter.to || undefined,
         page: recordsMeta.page,
         limit: recordsMeta.limit,
       });
@@ -233,6 +241,8 @@ export default function DashboardPage() {
         type: recordFilter.type || undefined,
         category: recordFilter.category,
         search: recordFilter.search,
+        from: recordFilter.from || undefined,
+        to: recordFilter.to || undefined,
         page: 1,
         limit: recordsMeta.limit,
       });
@@ -256,6 +266,8 @@ export default function DashboardPage() {
         type: recordFilter.type || undefined,
         category: recordFilter.category,
         search: recordFilter.search,
+        from: recordFilter.from || undefined,
+        to: recordFilter.to || undefined,
         page: safePage,
         limit: recordsMeta.limit,
       });
@@ -278,6 +290,8 @@ export default function DashboardPage() {
         type: recordFilter.type || undefined,
         category: recordFilter.category,
         search: recordFilter.search,
+        from: recordFilter.from || undefined,
+        to: recordFilter.to || undefined,
         page: 1,
         limit: nextLimit,
       });
@@ -306,7 +320,7 @@ export default function DashboardPage() {
       setLoading(true);
       setStatusText("Loading dashboard...");
       try {
-        const [dashboardRes, recordsRes, usersRes] = await Promise.all([
+        const [dashboardRes, recordsRes, usersRes, heatmapRes] = await Promise.all([
           apiRequest<{
             data: { summary: DashboardSummary; monthlyTrends: MonthlyTrend[] };
           }>("/api/dashboard", token),
@@ -317,6 +331,9 @@ export default function DashboardPage() {
           canManage
             ? apiRequest<{ data: AdminUser[] }>("/api/admin/users", token)
             : Promise.resolve({ data: [] as AdminUser[] }),
+          apiRequest<{
+            data: { date: string; income: number; expense: number; net: number; count: number }[];
+          }>("/api/dashboard/heatmap", token),
         ]);
 
         setSummary(dashboardRes.data.summary);
@@ -324,6 +341,7 @@ export default function DashboardPage() {
         setRecords(recordsRes.data);
         setRecordsMeta(recordsRes.meta);
         setUsers(usersRes.data);
+        setHeatmapData(heatmapRes.data);
         setStatusText("Dashboard loaded");
       } catch (error) {
         setStatusText(error instanceof Error ? error.message : "Failed to load dashboard");
@@ -361,6 +379,7 @@ export default function DashboardPage() {
       />
 
       <SummaryGrid summary={summary} />
+      <SpendingHeatmap data={heatmapData} loading={loading} />
       <TrendsSection monthlyTrends={monthlyTrends} trendMax={trendMax} />
 
       <section className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">

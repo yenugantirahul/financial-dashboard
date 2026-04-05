@@ -1,4 +1,5 @@
 import express from "express";
+import compression from "compression";
 import cookieParser from "cookie-parser";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
@@ -18,6 +19,7 @@ const corsOrigins = (
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+app.use(compression());
 app.use(cookieParser());
 
 // Express v5

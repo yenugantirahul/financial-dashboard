@@ -6,6 +6,8 @@ export type RecordsQuery = {
   type?: "INCOME" | "EXPENSE";
   category?: string;
   search?: string;
+  from?: string;
+  to?: string;
   page?: number;
   limit?: number;
 };
@@ -60,6 +62,12 @@ export async function getRecords<T>(token: string, query?: RecordsQuery): Promis
   }
   if (query?.search?.trim()) {
     params.set("search", query.search.trim());
+  }
+  if (query?.from?.trim()) {
+    params.set("from", query.from.trim());
+  }
+  if (query?.to?.trim()) {
+    params.set("to", query.to.trim());
   }
   if (typeof query?.page === "number") {
     params.set("page", String(query.page));

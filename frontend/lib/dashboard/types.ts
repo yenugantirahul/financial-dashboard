@@ -40,6 +40,8 @@ export type RecordFilter = {
   type: "" | RecordType;
   category: string;
   search: string;
+  from: string;
+  to: string;
 };
 
 export type RecordsMeta = {

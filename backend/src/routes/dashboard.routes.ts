@@ -171,4 +171,52 @@ router.get("/trends", authenticate, authorize("ADMIN", "ANALYST", "VIEWER"), asy
   }
 });
 
+router.get("/heatmap", authenticate, authorize("ADMIN", "ANALYST", "VIEWER"), async (_req, res) => {
+  try {
+    const today = new Date();
+    const yearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+
+    const records = await prisma.financialRecord.findMany({
+      where: {
+        deletedAt: null,
+        date: { gte: yearAgo },
+      },
+      select: {
+        amount: true,
+        type: true,
+        date: true,
+      },
+    });
+
+    const dayMap = new Map<string, { income: number; expense: number; net: number; count: number }>();
+
+    for (const record of records) {
+      const day = record.date.toISOString().slice(0, 10);
+      const bucket = dayMap.get(day) ?? { income: 0, expense: 0, net: 0, count: 0 };
+      const amount = toNumber(record.amount);
+      if (record.type === "INCOME") {
+        bucket.income += amount;
+      } else {
+        bucket.expense += amount;
+      }
+      bucket.net = bucket.income - bucket.expense;
+      bucket.count += 1;
+      dayMap.set(day, bucket);
+    }
+
+    const data = Array.from(dayMap.entries()).map(([date, bucket]) => ({
+      date,
+      ...bucket,
+    }));
+
+    return res.json({ success: true, data });
+  } catch (error) {
+    console.error("Dashboard heatmap error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load heatmap data",
+    });
+  }
+});
+
 export default router;
