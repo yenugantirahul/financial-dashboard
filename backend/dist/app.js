@@ -9,7 +9,8 @@ import adminRouter from "./routes/admin.routes.js";
 import recordsRouter from "./routes/records.routes.js";
 import cors from "cors";
 const app = express();
-const corsOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:3000")
+const corsOrigins = (process.env.CORS_ORIGIN ??
+    "http://localhost:3000,https://financial-dashboard-rho-one.vercel.app")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
@@ -17,7 +18,10 @@ app.use(cookieParser());
 // Express v5
 app.use(cors({
     origin: corsOrigins,
-    credentials: true, // important if using cookies
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Set-Cookie"],
 }));
 app.use(express.json());
 app.use("/api", apiRateLimiter);

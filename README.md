@@ -253,7 +253,7 @@ The frontend dev server starts on **http://localhost:3000** by default.
 ### Frontend (`frontend/.env.local`)
 | Variable                | Description                              | Example                     |
 |-------------------------|------------------------------------------|-----------------------------|
-| `NEXT_PUBLIC_API_URL`   | Backend API base URL                     | `http://localhost:5000`     |
+| `NEXT_PUBLIC_BACKEND_URL`| Backend API base URL                     | `http://localhost:5000`     |
 | `BETTER_AUTH_SECRET`    | Must match the backend secret            | `your-secret-key`           |
 | `BETTER_AUTH_URL`       | Backend URL for Better Auth client       | `http://localhost:5000`     |
 ---

@@ -1,6 +1,12 @@
+import "dotenv/config";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { prisma } from "./prisma.js";
+const trustedOrigins = (process.env.CORS_ORIGIN ??
+    "http://localhost:3000,https://financial-dashboard-rho-one.vercel.app")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: "postgresql",
@@ -10,16 +16,16 @@ export const auth = betterAuth({
         minPasswordLength: 8,
         autoSignIn: true,
     },
-    trustedOrigins: ["http://localhost:3000"],
+    trustedOrigins,
     user: {
         additionalFields: {
             role: {
-                type: ["ADMIN", "ANALYST", "VIEWER"],
+                type: "string",
                 required: false,
                 defaultValue: "VIEWER",
             },
             status: {
-                type: ["ACTIVE", "INACTIVE"],
+                type: "string",
                 required: false,
                 defaultValue: "ACTIVE",
             },

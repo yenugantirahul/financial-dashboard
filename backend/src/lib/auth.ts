@@ -4,7 +4,8 @@ import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { prisma } from "./prisma.js";
 
 const trustedOrigins = (
-  process.env.CORS_ORIGIN ?? "https://financial-dashboard-rho-one.vercel.app"
+  process.env.CORS_ORIGIN ??
+  "http://localhost:3000,https://financial-dashboard-rho-one.vercel.app"
 )
   .split(",")
   .map((o) => o.trim())

@@ -1,4 +1,6 @@
-const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000";
+import { getApiBaseUrl } from "@/lib/api-base";
+
+const BACKEND_BASE = getApiBaseUrl();
 
 export type RecordsQuery = {
   type?: "INCOME" | "EXPENSE";
